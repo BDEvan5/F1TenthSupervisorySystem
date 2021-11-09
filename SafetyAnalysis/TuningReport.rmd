@@ -27,16 +27,10 @@ library(dplyr)
 # Testing
 
 The following systems have been build:
-```{r, fig.height=2}
-test_data %>%
-  select(avg_times, success_rate, test_number) %>%
-  ggplot(aes(x=avg_times, y=success_rate, col=test_number, size=10))+
-  geom_point()+
-  xlim(350, 750)+
-  ylim(70, 100)+
-  xlab("Average times")+
-  ylab("Success Rate")
-```
 
+
+```{r}
+plot(test_data$name, test_data$avg_times)
+```
 
 

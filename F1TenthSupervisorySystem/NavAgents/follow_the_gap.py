@@ -1,10 +1,10 @@
 from numba.core.decorators import njit
 import numpy as np 
-
+import os, shutil
 
 class FollowTheGap:
-    def __init__(self, conf):
-        self.name = "Follow the Gap method"
+    def __init__(self, agent_name, conf):
+        self.name = agent_name
         self.conf = conf
         self.map = None
         self.cur_scan = None
@@ -13,7 +13,15 @@ class FollowTheGap:
         self.max_speed = conf.max_v
         self.max_steer = conf.max_steer
         self.v_min_plan = conf.v_min_plan
-       
+
+        path = os.getcwd() + "/" + conf.vehicle_path + self.name
+        if os.path.exists(path):
+            try:
+                os.rmdir(path)
+            except:
+                shutil.rmtree(path)
+        os.mkdir(path)
+
     def plan(self, obs):
 
         if obs['linear_vels_x'][0] < self.v_min_plan:

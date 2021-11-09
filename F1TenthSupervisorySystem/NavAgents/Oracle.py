@@ -7,11 +7,11 @@ import LearningLocalPlanning.LibFunctions as lib
 
 from F1TenthSupervisorySystem.Utils.speed_utils import calculate_speed
 from F1TenthSupervisorySystem.Utils import pure_pursuit_utils
-
+import os, shutil
 
 class Oracle:
-    def __init__(self, sim_conf) -> None:
-        self.name = "Oracle Path Follower"
+    def __init__(self, name, sim_conf) -> None:
+        self.name = name
         self.path_name = None
 
         self.wheelbase = sim_conf.l_f + sim_conf.l_r
@@ -26,6 +26,14 @@ class Oracle:
 
         self.aim_pts = []
         self.plan_track(sim_conf.map_name)
+
+        path = os.getcwd() + "/" + sim_conf.vehicle_path + self.name
+        if os.path.exists(path):
+            try:
+                os.rmdir(path)
+            except:
+                shutil.rmtree(path)
+        os.mkdir(path)
 
     def _get_current_waypoint(self, position):
         lookahead_distance = self.lookahead

@@ -55,8 +55,7 @@ def eval_kernel_final():
     n = 1
     test_name = f"final_{n}"
     agent_name = f"kernel_{test_name}_{run_n}"
-    agent_name = "kernel_end_RewardMag_2"
-    sim_conf.test_n = 1
+    # sim_conf.test_n = 1
 
     planner = EndVehicleTest(agent_name, sim_conf)
     kernel = TrackKernel(sim_conf)
@@ -67,12 +66,100 @@ def eval_kernel_final():
     config_dict['EvalName'] = test_name 
     config_dict['train_time'] = 0
     config_dict['test_number'] = n
-    config_dict['reward'] = f"magnitude_{1}"
+    config_dict['sup_reward'] = f"magnitude_{1}"
+    config_dict['reward'] = f"steering_01"
     config_dict.update(eval_dict)
 
     save_conf_dict(config_dict)
 
+
+
+def train_baseline():
+    n = 1
+    test_name = f"final_{n}"
+    agent_name = f"baseline{test_name}_{run_n}"
+
+    planner = EndVehicleTrain(agent_name, sim_conf)
+    # planner = EndVehicleTrain(agent_name, sim_conf, True)
+    train_time = TrainVehicle(sim_conf, planner)
+
+    planner = EndVehicleTest(agent_name, sim_conf)
+    eval_dict = run_evaluation(sim_conf, planner, render=False)
+
+    config_dict = vars(sim_conf)
+    config_dict['EvalName'] = test_name 
+    config_dict['train_time'] = train_time
+    config_dict['test_number'] = n
+    config_dict['reward'] = f"steering_01"
+    config_dict.update(eval_dict)
+
+    save_conf_dict(config_dict)
+
+
+def eval_baseline():
+    n = 1
+    test_name = f"final_{n}"
+    agent_name = f"baseline{test_name}_{run_n}"
+
+    planner = EndVehicleTest(agent_name, sim_conf)
+    eval_dict = run_evaluation(sim_conf, planner, render=True)
+
+    config_dict = vars(sim_conf)
+    config_dict['EvalName'] = test_name 
+    config_dict['train_time'] = 0
+    config_dict['test_number'] = n
+    config_dict['reward'] = f"steering_01"
+    config_dict.update(eval_dict)
+
+    save_conf_dict(config_dict)
+
+def eval_oracle():
+    n = 1
+    test_name = f"final_{n}"
+    agent_name = f"Oracle_{test_name}_{run_n}"
+    # sim_conf.test_n = 1
+
+    planner = Oracle(agent_name, sim_conf)
+    planner.name = agent_name
+
+    eval_dict = run_evaluation(sim_conf, planner, render=False)
+
+    config_dict = vars(sim_conf)
+    config_dict['EvalName'] = test_name 
+    config_dict['train_time'] = 0
+    config_dict['test_number'] = n
+    config_dict.update(eval_dict)
+
+    save_conf_dict(config_dict)
+
+
+def eval_fgm():
+    n = 1
+    test_name = f"final_{n}"
+    agent_name = f"FGM_{test_name}_{run_n}"
+    # sim_conf.test_n = 1
+
+    planner = FollowTheGap(agent_name, sim_conf)
+    planner.name = agent_name
+
+    eval_dict = run_evaluation(sim_conf, planner, render=False)
+
+    config_dict = vars(sim_conf)
+    config_dict['EvalName'] = test_name 
+    config_dict['train_time'] = 0
+    config_dict['test_number'] = n
+    config_dict.update(eval_dict)
+
+    save_conf_dict(config_dict)
+
+
+
 if __name__ == "__main__":
     # train_final_kenel()
-    eval_kernel_final()
+    # eval_kernel_final()
 
+    # train_baseline()
+    eval_baseline()
+
+    # eval_fgm()
+    # eval_oracle()

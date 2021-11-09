@@ -1,2 +1,5 @@
 EvalName,map_name,reward,test_n,train_n,kernel_time_step,name,avg_times,std_dev,success_rate,test_number,train_time
-final_1,porto,magnitude_1,1,20000,0.3,kernel_end_RewardMag_2,18.04000000000002,0.0,100.0,1,0
+final_1,porto,magnitude_1,10,20000,0.3,kernel_final_1_2,17.930000000000003,0.0,100.0,1,205.17880153656006
+final_1,porto,,10,20000,0.3,Oracle_final_1_2,8.539999999999862,0.0,100.0,1,0
+final_1,porto,steering_01,10,20000,0.3,baselinefinal_1_2,23.29000000000084,0.0,100.0,1,0
+final_1,porto,,10,20000,0.3,FGM_final_1_2,8.899999999999853,1.7763568394002505e-15,100.0,1,0
