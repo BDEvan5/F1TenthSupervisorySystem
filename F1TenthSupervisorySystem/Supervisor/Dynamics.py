@@ -79,6 +79,14 @@ def update_complex_state(state, action, dt, plan_steps=10, whlb=0.33, max_steer=
 
     return state
 
+def single_complex_update(state, action, dt, whlb=0.33, max_steer=0.4, max_v=7):
+
+    u = control_system(state, action)
+    state = update_kinematic_state(state, u, dt, whlb, max_steer, max_v)
+        # print(f"CMPLX:: Action: {u} --. New state: {state}")
+
+    return state
+
 def update_std_state(x, u, dt):
     n_steps = 10
     n_dt = dt/(n_steps-1)

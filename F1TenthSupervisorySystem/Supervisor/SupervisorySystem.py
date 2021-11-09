@@ -4,6 +4,38 @@ from numba import njit
 from matplotlib import pyplot as plt
 import yaml
 from F1TenthSupervisorySystem.Supervisor.Dynamics import update_complex_state
+from F1TenthSupervisorySystem.Supervisor.SimulatorDynamics import run_dynamics_update
+
+
+class SupervisorHistory:
+    def __init__(self):
+        self.old_actions = []
+        self.new_actions = []        
+
+    def add_actions(self, old, new=None):
+        if new is None:
+            self.old_actions.append(old[0])
+            self.new_actions.append(old[0])
+        else:
+            self.old_actions.append(old[0])
+            self.new_actions.append(new[0])
+            
+        
+    def plot_actions(self, wait=False):
+        plt.figure(1)
+        plt.clf()
+        plt.plot(self.old_actions)
+        plt.plot(self.new_actions)
+        plt.legend(['Old', 'New'])
+        plt.title('ActionHistory')
+        plt.pause(0.0001)
+
+        if wait:
+            plt.show()
+
+        self.old_actions = []
+        self.new_actions = []
+
 
 class Supervisor:
     def __init__(self, planner, kernel, conf):
@@ -14,12 +46,11 @@ class Supervisor:
 
         """
         
-        #TODO: make sure these parameters are defined in the planner an then remove them here. This is constructor dependency injection
         self.d_max = conf.max_steer
         self.v = 2
-        # self.kernel = ForestKernel(conf)
         self.kernel = kernel
         self.planner = planner
+        self.time_step = conf.kernel_time_step
 
         # aliases for the test functions
         try:
@@ -28,11 +59,15 @@ class Supervisor:
         self.plan_act = self.plan
         self.name = planner.name
 
+        self.dw = np.ones((5, 2))
+        self.dw[:, 0] = np.linspace(-self.d_max, self.d_max, conf.n_modes)
+        self.dw[:, 1] *= self.v
 
         self.action = None
         self.loop_counter = 0 
         self.plan_f = conf.plan_frequency
         self.v_min_plan = conf.v_min_plan
+        self.history = SupervisorHistory()
 
     def extract_state(self, obs):
         ego_idx = obs['ego_idx']
@@ -47,60 +82,60 @@ class Supervisor:
         return state
 
     def plan(self, obs):
-        if obs['linear_vels_x'][0] < self.v_min_plan:
-            return np.array([0, 7])
-        if self.action is None or self.loop_counter == self.plan_f:
-            self.loop_counter = 0
-            self.calculate_action(obs)
-        self.loop_counter += 1
+        # if obs['linear_vels_x'][0] < self.v_min_plan:
+        #     return np.array([0, 7])
+        # if self.action is None or self.loop_counter == self.plan_f:
+        #     self.loop_counter = 0
+        #     self.calculate_action(obs)
+        # self.loop_counter += 1
+        self.calculate_action(obs)
         return self.action
 
     def calculate_action(self, obs):
         init_action = self.planner.plan_act(obs)
         init_action[1] = self.v
         state = self.extract_state(obs)
-        safe, next_state = check_init_action(state, init_action, self.kernel)
+        safe, next_state = check_init_action(state, init_action, self.kernel, self.time_step)
         if safe:
             self.action = init_action
+            # self.history.add_actions(init_action)
             return
 
-        dw = self.generate_dw()
-        valids = simulate_and_classify(state, dw, self.kernel)
+        valids = simulate_and_classify(state, self.dw, self.kernel, self.time_step)
         if not valids.any():
             print('No Valid options')
             print(f"State: {state}")
             self.action = init_action
             return
         
-        self.action = modify_action(valids, dw)
+        self.action = modify_action(valids, self.dw)
+        # self.history.add_actions(init_action, self.action)
         # print(f"Valids: {valids} -> new action: {action}")
 
 
-    def generate_dw(self):
-        n_segments = 5
-        dw = np.ones((5, 2))
-        dw[:, 0] = np.linspace(-self.d_max, self.d_max, n_segments)
-        dw[:, 1] *= self.v
-        return dw
-
 #TODO jit all of this.
 
-def check_init_action(state, u0, kernel, time_step=0.2):
-    next_state = update_complex_state(state, u0, time_step)
+def check_init_action(state, u0, kernel, time_step):
+    # next_state = update_complex_state(state, u0, time_step)
+    next_state = run_dynamics_update(state, u0, time_step)
     # next_state = update_std_state(state, u0, 0.2)
     safe = kernel.check_state(next_state)
     
     return safe, next_state
 
-def simulate_and_classify(state, dw, kernel, time_step=0.2):
+def simulate_and_classify(state, dw, kernel, time_step):
     valid_ds = np.ones(len(dw))
+    next_states = []
     for i in range(len(dw)):
-        next_state = update_complex_state(state, dw[i], time_step)
+        # next_state = update_complex_state(state, dw[i], time_step)
+        next_state = run_dynamics_update(state, dw[i], time_step)
         # next_state = update_std_state(state, dw[i], 0.2)
+        next_states.append(next_state)
         safe = kernel.check_state(next_state)
         valid_ds[i] = safe 
 
         # print(f"State: {state} + Action: {dw[i]} --> Expected: {next_state}  :: Safe: {safe}")
+    # kernel.plot_kernel_modes(next_states)
 
     return valid_ds 
 
@@ -110,8 +145,6 @@ class LearningSupervisor(Supervisor):
         Supervisor.__init__(self, planner, kernel, conf)
         self.intervention_mag = 0
         self.intervene = False
-
-
 
     def intervene_reward(self):
         if self.intervene:
@@ -142,7 +175,7 @@ class LearningSupervisor(Supervisor):
         init_action = self.planner.plan_act(obs)
         state = self.extract_state(obs)
 
-        safe, next_state = check_init_action(state, init_action, self.kernel)
+        safe, next_state = check_init_action(state, init_action, self.kernel, self.time_step)
         if safe:
             # self.safe_history.add_locations(init_action[0], init_action[0])
             self.action = init_action
@@ -150,14 +183,13 @@ class LearningSupervisor(Supervisor):
 
         self.intervene = True
 
-        dw = self.generate_dw()
-        valids = simulate_and_classify(state, dw, self.kernel)
+        valids = simulate_and_classify(state, self.dw, self.kernel, self.time_step)
         if not valids.any():
             print(f'No Valid options: state : {state}')
             self.action = init_action
             return
         
-        self.action = modify_action(valids, dw)
+        self.action = modify_action(valids, self.dw)
         # print(f"Valids: {valids} -> new action: {action}")
         # self.safe_history.add_locations(init_action[0], action[0])
 
@@ -215,51 +247,22 @@ class BaseKernel:
         # plt.show()
         plt.pause(0.0001)
 
-class ForestKernel(BaseKernel):
-    def __init__(self, sim_conf):
-        super().__init__(sim_conf)
-        self.kernel = None
-        self.side_kernel = np.load(f"{sim_conf.kernel_path}SideKernel_{sim_conf.kernel_name}.npy")
-        self.obs_kernel = np.load(f"{sim_conf.kernel_path}ObsKernel_{sim_conf.kernel_name}.npy")
-        img_size = int(sim_conf.obs_img_size * sim_conf.n_dx)
-        obs_size = int(sim_conf.obs_size * sim_conf.n_dx)
-        self.obs_offset = int((img_size - obs_size) / 2)
-
-    def construct_kernel(self, track_size, obs_locations):
-        self.kernel = construct_forest_kernel(track_size, obs_locations, self.resolution, self.side_kernel, self.obs_kernel, self.obs_offset)
-
-    def get_indices(self, state):
-        phi_range = np.pi
-        x_ind = min(max(0, int(round((state[0])*self.resolution))), self.kernel.shape[0]-1)
-        y_ind = min(max(0, int(round((state[1])*self.resolution))), self.kernel.shape[1]-1)
-        theta_ind = int(round((state[2] + phi_range/2) / phi_range * (self.kernel.shape[2]-1)))
-        theta_ind = min(max(0, theta_ind), self.kernel.shape[2]-1)
-
-        return x_ind, y_ind, theta_ind
-
-
-@njit(cache=True)
-def construct_forest_kernel(track_size, obs_locations, resolution, side_kernel, obs_kernel, obs_offset):
-    kernel = np.zeros((track_size[0], track_size[1], side_kernel.shape[2]))
-    length = int(track_size[1] / resolution)
-    for i in range(length):
-        kernel[:, i*resolution:(i+1)*resolution] = side_kernel
-
-    for obs in obs_locations:
-        i = int(round(obs[0] * resolution)) - obs_offset
-        j = int(round(obs[1] * resolution)) - obs_offset * 2
-        if i < 0:
-            kernel[0:i+obs_kernel.shape[0], j:j+obs_kernel.shape[1]] += obs_kernel[abs(i):kernel.shape[0], :]
-            continue
-
-        if kernel.shape[0] - i <= (obs_kernel.shape[0]):
-            kernel[i:i+obs_kernel.shape[0], j:j+obs_kernel.shape[1]] += obs_kernel[0:kernel.shape[0]-i, :]
-            continue
-
-
-        kernel[i:i+obs_kernel.shape[0], j:j+obs_kernel.shape[1]] += obs_kernel
-    
-    return kernel
+    def plot_kernel_modes(self, states):
+        plt.figure(5)
+        plt.clf()
+        middle = states[2]
+        i, j, k = self.get_indices(middle)
+        plt.title(f"Kernel inds: {i}, {j}, {k}")
+        img = self.kernel[:, :, k].T 
+        plt.imshow(img, origin='lower')
+        # plt.show()
+        for state in states:
+            i, j, k = self.get_indices(state)
+            if self.kernel[i, j, k]:
+                plt.plot(i, j, 'x', markersize=20, color='red')
+            else:
+                plt.plot(i, j, 'x', markersize=20, color='green')
+        plt.pause(0.0001)
 
 
 class TrackKernel(BaseKernel):
@@ -276,7 +279,6 @@ class TrackKernel(BaseKernel):
 
         # self.view_kernel(0)
 
-
     def construct_kernel(self, a, b):
         pass
 
@@ -286,9 +288,9 @@ class TrackKernel(BaseKernel):
         y_ind = min(max(0, int(round((state[1]-self.origin[1])*self.resolution))), self.kernel.shape[1]-1)
 
         phi = state[2]
-        if phi >= phi_range/2:
+        while phi >= phi_range/2:
             phi = phi - phi_range
-        elif phi < -phi_range/2:
+        while phi < -phi_range/2:
             phi = phi + phi_range
         theta_ind = int(round((phi + phi_range/2) / phi_range * (self.kernel.shape[2]-1)))
 

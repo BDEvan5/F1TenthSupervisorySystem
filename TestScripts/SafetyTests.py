@@ -38,7 +38,7 @@ sim_conf = load_conf("track_kernel")
 
 
 def train_baseline(agent_name):
-    planner = EndVehicleTrain(agent_name, sim_conf)
+    planner = EndVehicleTrain(agent_name, sim_conf, True)
 
     TrainVehicle(sim_conf, planner)
 
@@ -47,6 +47,11 @@ def test_baseline(agent_name):
 
     run_multi_test(sim_conf, planner)
 
+def test_oracle():
+    vehicle = Oracle(sim_conf)
+    # vehicle = FollowTheGap(sim_conf)
+
+    run_multi_test(sim_conf, vehicle)
 
 def train_kenel(agent_name):
     planner = EndVehicleTrain(agent_name, sim_conf)
@@ -62,19 +67,8 @@ def test_kernel_sss(vehicle_name):
 
     run_kernel_test(sim_conf, safety_planner, test_n)
 
-def test_kernel_pure(vehicle_name):
-    env = TrackSim(sim_conf)
-    planner = EndVehicleTest(vehicle_name, sim_conf)
-    # kernel = TrackKernel(sim_conf)
-    # safety_planner = Supervisor(planner, kernel, sim_conf)
-
-    # eval_vehicle(env, planner, sim_conf, True)
-    eval_vehicle(env, planner, sim_conf, False)
-    # test_kernel_vehicle(env, planner, True, test_n, wait=False)
-
 def baseline_vs_kernel(baseline_name, kernel_name):
     test = TestVehicles(sim_conf, eval_name)
-    env = TrackSim(sim_conf)
     
     baseline = EndVehicleTest(baseline_name, sim_conf)
     test.add_vehicle(baseline)
@@ -84,12 +78,14 @@ def baseline_vs_kernel(baseline_name, kernel_name):
     safety_planner = Supervisor(planner, kernel, sim_conf)
     test.add_vehicle(safety_planner)
 
-    test.run_free_eval(env, test_n, wait=False)
+    # test.run_eval(True, wait=False)
+    test.run_eval(False, wait=False)
 
+from F1TenthSupervisorySystem.NavAgents.follow_the_gap import FollowTheGap
+from F1TenthSupervisorySystem.NavAgents.Oracle import Oracle
 
 def full_comparison(baseline_name, kernel_name):
     test = TestVehicles(sim_conf, eval_name)
-    env = TrackSim(sim_conf)
     
     baseline = EndVehicleTest(baseline_name, sim_conf)
     test.add_vehicle(baseline)
@@ -99,13 +95,13 @@ def full_comparison(baseline_name, kernel_name):
     safety_planner = Supervisor(planner, kernel, sim_conf)
     test.add_vehicle(safety_planner)
 
-    vehicle = ForestFGM()
+    vehicle = FollowTheGap(sim_conf)
     test.add_vehicle(vehicle)
 
     vehicle = Oracle(sim_conf)
     test.add_vehicle(vehicle)
 
-    test.run_free_eval(env, test_n, wait=False)
+    test.run_eval(False, wait=False)
 
 
 
@@ -113,19 +109,17 @@ def full_comparison(baseline_name, kernel_name):
 if __name__ == "__main__":
     # train_baseline(baseline_name)
     # test_baseline(baseline_name)
+    # test_oracle()
 
-
-    train_kenel(kernel_name)
+    # train_kenel(kernel_name)
     # test_kernel_sss(kernel_name)
     # test_kernel_sss(baseline_name)
-    # test_kernel_pure(kernel_name)
+    # test_baseline(kernel_name)
 
     # baseline_vs_kernel(baseline_name, kernel_name)
-    # full_comparison(baseline_name, kernel_name)
+    full_comparison(baseline_name, kernel_name)
 
 
 
     # rando_test()
-    # pp_kernel_test()
-    # straight_test()
 

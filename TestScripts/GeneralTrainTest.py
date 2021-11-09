@@ -46,7 +46,7 @@ def TrainVehicle(conf, vehicle, add_obs=False):
     max_ep_time = 40 
     for n in range(conf.train_n):
         a = vehicle.act(state)
-        s_prime, r, done, info = env.step(a)
+        s_prime, r, done, info = env.step(a[None, :])
 
         state = s_prime
         vehicle.agent.train()
@@ -105,7 +105,7 @@ def TrainKernelVehicle(vehicle, conf, add_obs=False):
         state = s_prime
         vehicle.planner.agent.train()
         
-        env.render('human_fast')
+        # env.render('human_fast')
         # env.render('human')
 
         if s_prime['lap_times'][0] > max_ep_time:
@@ -123,7 +123,7 @@ def TrainKernelVehicle(vehicle, conf, add_obs=False):
             # env.render()
 
 
-    vehicle.agent.save(directory=path)
+    vehicle.planner.agent.save(directory=path)
     # t_his.save_csv_data()
 
     print(f"Finished Training: {vehicle.name}")
@@ -157,7 +157,7 @@ def test_vehicle(conf, vehicle):
     while not done:
         action = vehicle.act(obs)
         # print(action)
-        obs, step_reward, done, info = env.step(action)
+        obs, step_reward, done, info = env.step(action[None, :])
         laptime += step_reward
         env.render(mode='human')
         # env.render(mode='human_fast')
@@ -183,7 +183,7 @@ def run_multi_test(conf, vehicle, add_obstacles=False):
         obses = []
         while not done and laptime < conf.max_time:
             action = vehicle.act(obs)
-            obs, r, done, info = env.step(action)
+            obs, r, done, info = env.step(action[None, :])
             
             laptime += step_reward
             # env.render(mode='human')
@@ -223,6 +223,7 @@ def run_kernel_test(conf, vehicle, n_tests=10, add_obstacles=False):
             env.render(mode='human_fast')
         # print('Sim elapsed time:', laptime, 'Real elapsed time:', time.time()-start)
         find_conclusion(obs, start)
+        # vehicle.history.plot_actions()
 
         # vehicle.plot_progress()
 
@@ -253,7 +254,7 @@ class TestData:
         self.N = N
  
     def save_txt_results(self):
-        test_name = 'Evals/' + self.eval_name + '.txt'
+        test_name = 'EvalResults/' + self.eval_name + '.txt'
         with open(test_name, 'w') as file_obj:
             file_obj.write(f"\nTesting Complete \n")
             file_obj.write(f"Map name:  \n")
@@ -282,7 +283,7 @@ class TestData:
             print(f"-----------------------------------------------------")
         
     def save_csv_results(self):
-        test_name = 'Evals/'  + self.eval_name + '.csv'
+        test_name = 'EvalResults/'  + self.eval_name + '.csv'
 
         data = [["#", "Name", "%Complete", "AvgTime", "Std"]]
         for i in range(self.N):
@@ -324,19 +325,19 @@ class TestVehicles(TestData):
     def add_vehicle(self, vehicle):
         self.vehicle_list.append(vehicle)
 
-    def run_eval(self, laps=100, show=False, add_obs=True, save=False, wait=False):
+    def run_eval(self, show=False, add_obs=False, save=False, wait=False):
         N = self.N = len(self.vehicle_list)
-        self.init_arrays(N, laps)
+        self.init_arrays(N, self.conf.test_n)
         conf = self.conf
 
         env = gym.make('f110_gym:f110-v0', map=conf.map_name, map_ext=conf.map_ext, num_agents=1)
         map_reset_pt = np.array([[conf.sx, conf.sy, conf.stheta]])
 
         state, step_reward, done, info = env.reset(map_reset_pt)
-        env.render()
 
-        for i in range(laps):
-            env.add_obstacles(10, [0.5, 0.5])
+        for i in range(self.conf.test_n):
+            if add_obs:
+                env.add_obstacles(10, [0.5, 0.5])
             for j in range(N):
                 vehicle = self.vehicle_list[j]
 
@@ -360,10 +361,10 @@ class TestVehicles(TestData):
         done = False
         start = time.time()
         while not done:
-            a = vehicle.act(state)
-            s_p, r, done, _ = env.step(a)
+            a = vehicle.plan(state)
+            s_p, r, done, _ = env.step(a[None, :])
             state = s_p
-            env.render()
+            # env.render()
 
             if s_p['collisions'][0] == 1:
                 break
