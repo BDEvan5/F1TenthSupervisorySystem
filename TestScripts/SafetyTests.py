@@ -8,6 +8,9 @@ from F1TenthSupervisorySystem.NavAgents.RandoPlanner import RandomPlanner
 
 from F1TenthSupervisorySystem.Supervisor.SupervisorySystem import Supervisor, TrackKernel, LearningSupervisor
 
+from F1TenthSupervisorySystem.NavAgents.follow_the_gap import FollowTheGap
+from F1TenthSupervisorySystem.NavAgents.Oracle import Oracle
+
 
 import numpy as np
 from matplotlib import pyplot as plt
@@ -46,13 +49,13 @@ def train_baseline(agent_name):
 def test_baseline(agent_name):
     planner = EndVehicleTest(agent_name, sim_conf)
 
-    run_multi_test(sim_conf, planner)
+    run_evaluation(sim_conf, planner)
 
 def test_oracle():
     # vehicle = Oracle(sim_conf)
     vehicle = FollowTheGap(sim_conf)
 
-    run_multi_test(sim_conf, vehicle)
+    run_evaluation(sim_conf, vehicle)
 
 def train_kenel(agent_name):
     planner = EndVehicleTrain(agent_name, sim_conf)
@@ -66,7 +69,7 @@ def test_kernel_sss(vehicle_name):
     kernel = TrackKernel(sim_conf)
     safety_planner = Supervisor(planner, kernel, sim_conf)
 
-    run_kernel_test(sim_conf, safety_planner, test_n)
+    run_evaluation(sim_conf, safety_planner, render=True)
 
 def baseline_vs_kernel(baseline_name, kernel_name):
     test = TestVehicles(sim_conf, eval_name)
@@ -80,10 +83,7 @@ def baseline_vs_kernel(baseline_name, kernel_name):
     test.add_vehicle(safety_planner)
 
     # test.run_eval(True, wait=False)
-    test.run_eval(False, wait=False)
-
-from F1TenthSupervisorySystem.NavAgents.follow_the_gap import FollowTheGap
-from F1TenthSupervisorySystem.NavAgents.Oracle import Oracle
+    test.run_eval()
 
 def full_comparison(baseline_name, kernel_name):
     test = TestVehicles(sim_conf, eval_name)
@@ -102,7 +102,7 @@ def full_comparison(baseline_name, kernel_name):
     vehicle = Oracle(sim_conf)
     test.add_vehicle(vehicle)
 
-    test.run_eval(False, wait=False)
+    test.run_eval()
 
 
 
@@ -112,8 +112,8 @@ if __name__ == "__main__":
     # test_baseline(baseline_name)
     # test_oracle()
 
-    train_kenel(kernel_name)
-    # test_kernel_sss(kernel_name)
+    # train_kenel(kernel_name)
+    test_kernel_sss(kernel_name)
     # test_kernel_sss(baseline_name)
     # test_baseline(kernel_name)
 
