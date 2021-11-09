@@ -12,7 +12,7 @@ class RandomPlanner:
         v_current = obs['linear_vels_x'][0]
         v_min_plan = 1
         if v_current < v_min_plan:
-            return np.array([[0, 2]])
+            return np.array([0, 2])
 
         np.random.seed()
         steering = np.random.normal(0, 0.1)

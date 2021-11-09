@@ -1,0 +1,5 @@
+#,Name,%Complete,AvgTime,Std
+0,std_end_baseline_1,0.0,0.0,0.0
+1,kernel_end_RewardMag_1,100.0,17.319999999999908,0.0
+2,Follow the Gap method,100.0,8.909999999999854,0.0
+3,Oracle Path Follower,100.0,8.569999999999862,0.0
