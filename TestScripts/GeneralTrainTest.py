@@ -109,8 +109,30 @@ def run_evaluation(conf, vehicle, render=False):
             # env.render(mode='human')
             if render:
                 env.render(mode='human_fast')
-        find_conclusion(obs, start)
+        r = find_conclusion(obs, start)
 
+        #TODO: keep going here.
+        if r == -1 or r == 0:
+            crashes[j] += 1
+        else:
+            self.completes[j] += 1
+            self.lap_times[j].append(laptime)
+
+
+    print(f"Crashes: {crashes}")
+    print(f"Completes: {completes} --> {success_rate:.2f} %")
+    print(f"Lap times Avg: {avg_times} --> Std: {std_dev}")
+
+    eval_dict = {}
+    eval_dict['name'] = vehicle.name
+    eval_dict['success_rate'] = float(success_rate)
+    eval_dict['avg_times'] = float(avg_times)
+    eval_dict['std_dev'] = float(std_dev)
+    eval_dict['no_obs_time'] = float(no_obs_time)
+
+    print(f"Finished running test and saving file with results.")
+
+    return eval_dict
 
 
 

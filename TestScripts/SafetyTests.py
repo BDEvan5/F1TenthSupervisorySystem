@@ -39,6 +39,11 @@ eval_name = f"end_comparison_{run_n}"
 sim_conf = load_conf("track_kernel")
 
 
+def save_conf_dict(dictionary):
+    path = dictionary["vehicle_path"] + dictionary.name + f"/{dictionary.name}_record.yaml"
+    with open(path, 'w') as file:
+        yaml.dump(dictionary, file)
+
 
 def train_baseline(agent_name):
     planner = EndVehicleTrain(agent_name, sim_conf)
