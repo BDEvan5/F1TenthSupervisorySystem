@@ -12,8 +12,16 @@ class FollowTheGap:
     
         self.max_speed = conf.max_v
         self.max_steer = conf.max_steer
-        
+        self.v_min_plan = conf.v_min_plan
+
     def act(self, obs):
+        return self.plan(obs)
+        
+    def plan(self, obs):
+
+        if obs['linear_vels_x'][0] < self.v_min_plan:
+            return np.array([0, 7])
+
         ranges = np.array(obs['scans'][0], dtype=np.float)
         angle_increment = np.pi / len(ranges)
 
@@ -33,7 +41,7 @@ class FollowTheGap:
 
         speed = self.max_speed * ranges[aim] / max_range * 0.7
 
-        return np.array([[steering_angle, speed]])
+        return np.array([steering_angle, speed])
 
 @njit
 def preprocess_lidar(ranges, max_range):
@@ -92,7 +100,7 @@ def find_max_gap(input_vector):
 
     return max_start, max_start + max_size - 1
 
-@njit  
+# @njit  
 def find_best_point(start_i, end_i, ranges):
     # return best index to goto
     mid_i = (start_i + end_i) /2

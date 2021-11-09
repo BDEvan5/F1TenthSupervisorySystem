@@ -4,6 +4,7 @@ from numba import njit
 import yaml
 from PIL import Image
 from F1TenthSupervisorySystem.Supervisor.Dynamics import update_complex_state
+from F1TenthSupervisorySystem.Supervisor.SimulatorDynamics import run_dynamics_update
 
 from argparse import Namespace
 
@@ -23,7 +24,7 @@ class BaseKernel:
         self.velocity = 2 #TODO: make this a config param
         self.track_img = track_img
         self.n_dx = int(sim_conf.n_dx)
-        self.t_step = sim_conf.time_step
+        self.t_step = sim_conf.kernel_time_step
         self.n_phi = sim_conf.n_phi
         self.phi_range = sim_conf.phi_range
         self.half_block = 1 / (2*self.n_dx)
@@ -64,20 +65,20 @@ class ViabilityGenerator(BaseKernel):
         self.fig, self.axs = plt.subplots(2, 2)
         self.dynamics = build_viability_dynamics(self.phis, self.qs, self.velocity, self.t_step, self.sim_conf)
 
-    def view_kernel(self, phi, show=True, fig_n=1):
+    def view_kernel(self, phi, show=True, fig_n=2):
         phi_ind = np.argmin(np.abs(self.phis - phi))
         plt.figure(fig_n)
-        plt.clf()
-        plt.title(f"Kernel phi: {phi} (ind: {phi_ind})")
-        # mode = int((self.n_modes-1)/2)
-        img = self.kernel[:, :, phi_ind].T + self.o_map.T
-        plt.imshow(img, origin='lower')
+        # plt.clf()
+        # plt.title(f"Kernel phi: {phi} (ind: {phi_ind})")
+        # # mode = int((self.n_modes-1)/2)
+        # img = self.kernel[:, :, phi_ind].T + self.o_map.T
+        # plt.imshow(img, origin='lower')
 
         arrow_len = 0.15
         plt.arrow(0, 0, np.sin(phi)*arrow_len, np.cos(phi)*arrow_len, color='r', width=0.001)
         for m in range(self.n_modes):
             i, j = int(self.n_x/2), 0 
-            di, dj, new_k = self.dynamics[phi_ind, m, -1]
+            di, dj, new_k = self.dynamics[phi_ind, m]
 
 
             plt.arrow(i, j, di, dj, color='b', width=0.001)
@@ -127,7 +128,6 @@ class ViabilityGenerator(BaseKernel):
 # @njit(cache=True)
 def build_viability_dynamics(phis, qs, velocity, time, conf):
     resolution = conf.n_dx
-    n_pts = conf.dynamics_pts
     phi_range = conf.phi_range
     block_size = 1 / (resolution)
     phi_size = phi_range / (conf.n_phi -1)
@@ -137,7 +137,8 @@ def build_viability_dynamics(phis, qs, velocity, time, conf):
         for j, m in enumerate(qs):
                 state = np.array([0, 0, p, velocity, 0])
                 action = np.array([m, velocity])
-                new_state = update_complex_state(state, action, time)
+                # new_state = update_complex_state(state, action, time)
+                new_state = run_dynamics_update(state, action, time)
 
                 dx, dy, phi = new_state[0], new_state[1], new_state[2]
 
@@ -240,6 +241,7 @@ def build_discrim_dynamics(phis, qs, velocity, time, conf):
                 action = np.array([m, velocity])
                 # new_state = update_std_state(state, action, t_step)
                 new_state = update_complex_state(state, action, time)
+
                 # std_new_state = update_std_state(state, action, t_step)
                 # ds = new_state - std_new_state
                 dx, dy, phi = new_state[0], new_state[1], new_state[2]
@@ -345,11 +347,13 @@ def prepare_track_img(sim_conf):
     return map_img2
 
 @njit(cache=True)
-def shrink_img(img):
+def shrink_img(img, n_shrinkpx):
     o_img = np.copy(img)
 
-    search = np.array([[0, 1], [1, 0], [0, -1], [-1, 0], [1, 1], [1, -1], [-1, 1], [-1, -1]])
-    for i in range(10):
+    search = np.array([[0, 1], [1, 0], [0, -1], 
+                [-1, 0], [1, 1], [1, -1], 
+                [-1, 1], [-1, -1]])
+    for i in range(n_shrinkpx):
         t_img = np.copy(img)
         for j in range(img.shape[0]):
             for k in range(img.shape[1]):
@@ -381,12 +385,13 @@ def build_track_kernel(conf):
 
 
     img = prepare_track_img(conf) 
-    o, img = shrink_img(img)
+    o, img = shrink_img(img, 22)
     # plot_img(o, img)
     # plt.figure(1)
     # plt.imshow(img)
     # plt.pause(0.0001)
     kernel = ViabilityGenerator(img, conf)
+    kernel.view_kernel(np.pi/2, False, 2)
     kernel.calculate_kernel(30)
     kernel.save_kernel(f"TrackKernel_{conf.track_kernel_path}_{conf.map_name}")
     kernel.view_build(True)

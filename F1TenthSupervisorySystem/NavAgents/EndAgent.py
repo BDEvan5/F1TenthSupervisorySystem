@@ -77,6 +77,10 @@ class EndVehicleTrain(EndBase):
         nn_obs = self.transform_obs(obs)
         self.add_memory_entry(obs, nn_obs)
 
+        if obs['linear_vels_x'][0] < self.v_min_plan:
+            self.action = np.array([0, 7])
+            return self.action
+
         self.state = obs
         nn_action = self.agent.act(nn_obs)
         self.nn_act = nn_action
@@ -137,6 +141,10 @@ class EndVehicleTest(EndBase):
     def plan_act(self, obs):
         nn_obs = self.transform_obs(obs)
 
+        if obs['linear_vels_x'][0] < self.v_min_plan:
+            self.action = np.array([0, 7])
+            return self.action
+
         nn_obs = torch.FloatTensor(nn_obs.reshape(1, -1))
         nn_action = self.actor(nn_obs).data.numpy().flatten()
         self.nn_act = nn_action
@@ -146,3 +154,7 @@ class EndVehicleTest(EndBase):
         self.action = np.array([steering_angle, speed])
 
         return self.action # implemented for the safety wrapper
+
+    def plan(self, obs):
+        # alias for testing
+        return self.plan_act(obs)
