@@ -59,7 +59,7 @@ def train_kenel(agent_name):
     kernel = TrackKernel(sim_conf)
     safety_planner = LearningSupervisor(planner, kernel, sim_conf)
 
-    TrainKernelVehicle(safety_planner, sim_conf)
+    TrainVehicle(sim_conf, safety_planner)
 
 def test_kernel_sss(vehicle_name):
     planner = EndVehicleTest(vehicle_name, sim_conf)
@@ -110,16 +110,16 @@ def full_comparison(baseline_name, kernel_name):
 if __name__ == "__main__":
     # train_baseline(baseline_name)
     # test_baseline(baseline_name)
-    test_oracle()
+    # test_oracle()
 
-    # train_kenel(kernel_name)
+    train_kenel(kernel_name)
     # test_kernel_sss(kernel_name)
     # test_kernel_sss(baseline_name)
     # test_baseline(kernel_name)
 
     # baseline_vs_kernel(baseline_name, kernel_name)
+    # sim_conf.test_n = 1
     # full_comparison(baseline_name, kernel_name)
-
 
 
     # rando_test()

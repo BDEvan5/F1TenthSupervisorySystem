@@ -136,6 +136,8 @@ class LearningSupervisor(Supervisor):
         self.intervention_mag = 0
         self.intervene = False
 
+        self.agent = planner.agent
+
     def intervene_reward(self):
         if self.intervene:
             self.intervene = False
@@ -185,6 +187,8 @@ class LearningSupervisor(Supervisor):
 
         self.intervention_mag = self.action[0] - init_action[0]
         return self.action
+
+
 
 @njit(cache=True)
 def modify_action(valid_window, dw):

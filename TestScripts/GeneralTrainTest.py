@@ -68,52 +68,11 @@ def TrainVehicle(conf, vehicle, add_obs=False):
                 env.add_obstacles(conf.n_obs, [conf.obs_size, conf.obs_size])
             # env.render()
 
-
     vehicle.agent.save(directory=path)
 
     print(f"Finished Training: {vehicle.name}")
 
 
-def TrainKernelVehicle(vehicle, conf, add_obs=False):
-    path = 'Vehicles/' + vehicle.name
-
-    env = gym.make('f110_gym:f110-v0', map=conf.map_name, map_ext=conf.map_ext, num_agents=1)
-    map_reset_pt = np.array([[conf.sx, conf.sy, conf.stheta]])
-    state, step_reward, done, info = env.reset(map_reset_pt)
-
-    done = False
-    start = time.time()
-
-    max_ep_time = 40 
-    for n in range(conf.train_n):
-        a = vehicle.plan(state)
-        s_prime, r, done, info = env.step(a[None, :])
-
-        state = s_prime
-        vehicle.planner.agent.train()
-        
-        # env.render('human_fast')
-        # env.render('human')
-
-        if s_prime['lap_times'][0] > max_ep_time:
-            done = True
-        
-        if done or s_prime['collisions'][0] == 1:
-            find_conclusion(s_prime, start)
-            vehicle.done_entry(s_prime)
-
-            start = time.time()
-
-            state, step_reward, done, info = env.reset(map_reset_pt)
-            if add_obs:
-                env.add_obstacles(conf.n_obs, [conf.obs_size, conf.obs_size])
-            # env.render()
-
-
-    vehicle.planner.agent.save(directory=path)
-    # t_his.save_csv_data()
-
-    print(f"Finished Training: {vehicle.name}")
 
 def find_conclusion(s_p, start):
     laptime = s_p['lap_times'][0]
