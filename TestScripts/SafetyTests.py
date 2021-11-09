@@ -113,13 +113,13 @@ if __name__ == "__main__":
     # test_oracle()
 
     # train_kenel(kernel_name)
-    test_kernel_sss(kernel_name)
+    # test_kernel_sss(kernel_name)
     # test_kernel_sss(baseline_name)
     # test_baseline(kernel_name)
 
     # baseline_vs_kernel(baseline_name, kernel_name)
-    # sim_conf.test_n = 1
-    # full_comparison(baseline_name, kernel_name)
+    sim_conf.test_n = 1
+    full_comparison(baseline_name, kernel_name)
 
 
     # rando_test()
