@@ -137,6 +137,7 @@ class LearningSupervisor(Supervisor):
         self.intervene = False
 
         self.agent = planner.agent
+        self.calculate_reward = self.magnitude_reward
 
     def intervene_reward(self):
         if self.intervene:
@@ -152,11 +153,6 @@ class LearningSupervisor(Supervisor):
 
     def zero_reward(self):
         return 0
-
-    def calculate_reward(self):
-        # return self.zero_reward()
-        return self.magnitude_reward()
-        # return self.intervene_reward()
 
     def done_entry(self, s_prime):
         s_prime['reward'] = self.calculate_reward()

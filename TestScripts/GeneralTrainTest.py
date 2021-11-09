@@ -27,8 +27,16 @@ def init_file_struct(path):
     os.mkdir(path)
 
 
+def save_conf_dict(dictionary):
+    name = dictionary["name"]
+    path = dictionary["vehicle_path"] + name + f"/{name}_record.yaml"
+    with open(path, 'w') as file:
+        yaml.dump(dictionary, file)
+
+
 """Train"""
 def TrainVehicle(conf, vehicle, add_obs=False):
+    start_time = time.time()
     path = conf.vehicle_path + vehicle.name
 
     env = gym.make('f110_gym:f110-v0', map=conf.map_name, map_ext=conf.map_ext, num_agents=1)
@@ -72,6 +80,9 @@ def TrainVehicle(conf, vehicle, add_obs=False):
 
     print(f"Finished Training: {vehicle.name}")
 
+    train_time = time.time() - start_time
+
+    return train_time
 
 
 def find_conclusion(s_p, start):
@@ -94,6 +105,10 @@ def find_conclusion(s_p, start):
 def run_evaluation(conf, vehicle, render=False):
     env = gym.make('f110_gym:f110-v0', map=conf.map_name, map_ext=conf.map_ext, num_agents=1)
 
+    crashes = 0
+    completes = 0 
+    lap_times = []
+
     for i in range(conf.test_n):
 
         obs, step_reward, done, info = env.reset(np.array([[conf.sx, conf.sy, conf.stheta]]))
@@ -113,11 +128,16 @@ def run_evaluation(conf, vehicle, render=False):
 
         #TODO: keep going here.
         if r == -1 or r == 0:
-            crashes[j] += 1
+            crashes += 1
         else:
-            self.completes[j] += 1
-            self.lap_times[j].append(laptime)
+            completes += 1
+            lap_times.append(laptime)
 
+    success_rate = (completes / (completes + crashes) * 100)
+    if len(lap_times) > 0:
+        avg_times, std_dev = np.mean(lap_times), np.std(lap_times)
+    else:
+        avg_times, std_dev = 0, 0
 
     print(f"Crashes: {crashes}")
     print(f"Completes: {completes} --> {success_rate:.2f} %")
@@ -128,7 +148,6 @@ def run_evaluation(conf, vehicle, render=False):
     eval_dict['success_rate'] = float(success_rate)
     eval_dict['avg_times'] = float(avg_times)
     eval_dict['std_dev'] = float(std_dev)
-    eval_dict['no_obs_time'] = float(no_obs_time)
 
     print(f"Finished running test and saving file with results.")
 

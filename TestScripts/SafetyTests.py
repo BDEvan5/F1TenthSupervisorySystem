@@ -62,19 +62,31 @@ def test_oracle():
 
     run_evaluation(sim_conf, vehicle)
 
-def train_kenel(agent_name):
+def train_final_kenel(agent_name):
+    n = 1
+    test_name = f"final_{n}"
+
     planner = EndVehicleTrain(agent_name, sim_conf)
     kernel = TrackKernel(sim_conf)
     safety_planner = LearningSupervisor(planner, kernel, sim_conf)
+    safety_planner.calculate_reward = safety_planner.magnitude_reward
+    #TODO: set up rewards as separate classes
 
-    TrainVehicle(sim_conf, safety_planner)
+    train_time = TrainVehicle(sim_conf, safety_planner)
 
-def test_kernel_sss(vehicle_name):
-    planner = EndVehicleTest(vehicle_name, sim_conf)
+    planner = EndVehicleTest(agent_name, sim_conf)
     kernel = TrackKernel(sim_conf)
     safety_planner = Supervisor(planner, kernel, sim_conf)
 
-    run_evaluation(sim_conf, safety_planner, render=True)
+    eval_dict = run_evaluation(sim_conf, safety_planner, render=True)
+
+    config_dict = vars(sim_conf)
+    config_dict['EvalName'] = test_name 
+    config_dict['train_time'] = train_time
+    config_dict['test_number'] = n
+    config_dict['reward'] = f"magnitude_{1}"
+    config_dict.update(eval_dict)
+
 
 def baseline_vs_kernel(baseline_name, kernel_name):
     test = TestVehicles(sim_conf, eval_name)
@@ -118,13 +130,14 @@ if __name__ == "__main__":
     # test_oracle()
 
     # train_kenel(kernel_name)
+    train_final_kenel(kernel_name)
     # test_kernel_sss(kernel_name)
     # test_kernel_sss(baseline_name)
     # test_baseline(kernel_name)
 
     # baseline_vs_kernel(baseline_name, kernel_name)
-    sim_conf.test_n = 1
-    full_comparison(baseline_name, kernel_name)
+    # sim_conf.test_n = 1
+    # full_comparison(baseline_name, kernel_name)
 
 
     # rando_test()
