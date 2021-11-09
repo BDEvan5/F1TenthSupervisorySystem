@@ -18,3 +18,6 @@ F1TenthSupervisorySystem/Utils/__pycache__/
 TestScripts/__pycache__/
 
 Vehicles/
+.Rproj.user
+
+SafetyAnalysis/SafetyAnalysis.Rproj

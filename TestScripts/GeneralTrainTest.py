@@ -27,25 +27,28 @@ def init_file_struct(path):
     os.mkdir(path)
 
 
+def save_conf_dict(dictionary):
+    name = dictionary["name"]
+    path = dictionary["vehicle_path"] + name + f"/{name}_record.yaml"
+    with open(path, 'w') as file:
+        yaml.dump(dictionary, file)
+
+
 """Train"""
 def TrainVehicle(conf, vehicle, add_obs=False):
+    start_time = time.time()
     path = conf.vehicle_path + vehicle.name
 
     env = gym.make('f110_gym:f110-v0', map=conf.map_name, map_ext=conf.map_ext, num_agents=1)
     map_reset_pt = np.array([[conf.sx, conf.sy, conf.stheta]])
     state, step_reward, done, info = env.reset(map_reset_pt)
-    if add_obs:
-        env.add_obstacles(conf.n_obs, [conf.obs_size, conf.obs_size])
-    # env.render()
-
-    print_n = 500
 
     done = False
     start = time.time()
 
     max_ep_time = 40 
     for n in range(conf.train_n):
-        a = vehicle.act(state)
+        a = vehicle.plan(state)
         s_prime, r, done, info = env.step(a[None, :])
 
         state = s_prime
@@ -53,10 +56,6 @@ def TrainVehicle(conf, vehicle, add_obs=False):
         
         # env.render('human_fast')
         # env.render('human')
-
-        if n % print_n == 0 and n > 0:
-            # t_his.print_update()
-            vehicle.agent.save(directory=path)
 
         if s_prime['lap_times'][0] > max_ep_time:
             done = True
@@ -77,56 +76,14 @@ def TrainVehicle(conf, vehicle, add_obs=False):
                 env.add_obstacles(conf.n_obs, [conf.obs_size, conf.obs_size])
             # env.render()
 
-
     vehicle.agent.save(directory=path)
-    # t_his.save_csv_data()
 
     print(f"Finished Training: {vehicle.name}")
 
-    # return t_his.rewards
+    train_time = time.time() - start_time
 
-def TrainKernelVehicle(vehicle, conf, add_obs=False):
-    path = 'Vehicles/' + vehicle.name
+    return train_time
 
-    env = gym.make('f110_gym:f110-v0', map=conf.map_name, map_ext=conf.map_ext, num_agents=1)
-    map_reset_pt = np.array([[conf.sx, conf.sy, conf.stheta]])
-    state, step_reward, done, info = env.reset(map_reset_pt)
-    if add_obs:
-        env.add_obstacles(conf.n_obs, [conf.obs_size, conf.obs_size])
-
-    done = False
-    start = time.time()
-
-    max_ep_time = 40 
-    for n in range(conf.train_n):
-        a = vehicle.plan(state)
-        s_prime, r, done, info = env.step(a[None, :])
-
-        state = s_prime
-        vehicle.planner.agent.train()
-        
-        # env.render('human_fast')
-        # env.render('human')
-
-        if s_prime['lap_times'][0] > max_ep_time:
-            done = True
-        
-        if done or s_prime['collisions'][0] == 1:
-            find_conclusion(s_prime, start)
-            vehicle.done_entry(s_prime)
-
-            start = time.time()
-
-            state, step_reward, done, info = env.reset(map_reset_pt)
-            if add_obs:
-                env.add_obstacles(conf.n_obs, [conf.obs_size, conf.obs_size])
-            # env.render()
-
-
-    vehicle.planner.agent.save(directory=path)
-    # t_his.save_csv_data()
-
-    print(f"Finished Training: {vehicle.name}")
 
 def find_conclusion(s_p, start):
     laptime = s_p['lap_times'][0]
@@ -143,92 +100,58 @@ def find_conclusion(s_p, start):
 
 
 
-def test_vehicle(conf, vehicle):
-    
+
+
+def run_evaluation(conf, vehicle, render=False):
     env = gym.make('f110_gym:f110-v0', map=conf.map_name, map_ext=conf.map_ext, num_agents=1)
-    obs, step_reward, done, info = env.reset(np.array([[conf.sx, conf.sy, conf.stheta]]))
-    env.render()
-    # env.add_obstacles(10)
-    obs, step_reward, done, info = env.reset(np.array([[conf.sx, conf.sy, conf.stheta]]))
 
-    laptime = 0.0
-    start = time.time()
-
-    while not done:
-        action = vehicle.act(obs)
-        # print(action)
-        obs, step_reward, done, info = env.step(action[None, :])
-        laptime += step_reward
-        env.render(mode='human')
-        # env.render(mode='human_fast')
-    # print('Sim elapsed time:', laptime, 'Real elapsed time:', time.time()-start)
-    find_conclusion(obs, start)
-
-
-
-def run_multi_test(conf, vehicle, add_obstacles=False):
-    env = gym.make('f110_gym:f110-v0', map=conf.map_name, map_ext=conf.map_ext, num_agents=1)
+    crashes = 0
+    completes = 0 
+    lap_times = []
 
     for i in range(conf.test_n):
 
         obs, step_reward, done, info = env.reset(np.array([[conf.sx, conf.sy, conf.stheta]]))
-        env.render()
-        if add_obstacles:
-            env.add_obstacles(conf.n_obs, [conf.obs_size, conf.obs_size])
-
-        # s_hist.plot_wpts()
-
-        laptime = 0.0
-        start = time.time()
-        obses = []
-        while not done and laptime < conf.max_time:
-            action = vehicle.act(obs)
-            obs, r, done, info = env.step(action[None, :])
-            
-            laptime += step_reward
-            # env.render(mode='human')
-            env.render(mode='human_fast')
-        # print('Sim elapsed time:', laptime, 'Real elapsed time:', time.time()-start)
-        find_conclusion(obs, start)
-
-        # vehicle.plot_progress()
-
-
-def run_kernel_test(conf, vehicle, n_tests=10, add_obstacles=False):
-    env = gym.make('f110_gym:f110-v0', map=conf.map_name, map_ext=conf.map_ext, num_agents=1)
-    # s_hist = sim_history.SimHistory(conf)
-
-    for i in range(n_tests):
-
-        obs, step_reward, done, info = env.reset(np.array([[conf.sx, conf.sy, conf.stheta]]))
-        env.render()
-        if add_obstacles:
-            env.add_obstacles(conf.n_obs, [conf.obs_size, conf.obs_size])
-
-        # s_hist.plot_wpts()
 
         laptime = 0.0
         start = time.time()
         obses = []
         while not done and laptime < conf.max_time:
             action = vehicle.plan(obs)
-            # action = vehicle.act(obs)
             obs, r, done, info = env.step(action[None, :])
             
-            # s_hist.add_step(obs, action)
-            # s_hist.plot_progress()
             laptime += step_reward
-            # obses.append(obs)
             # env.render(mode='human')
-            env.render(mode='human_fast')
-        # print('Sim elapsed time:', laptime, 'Real elapsed time:', time.time()-start)
-        find_conclusion(obs, start)
-        # vehicle.history.plot_actions()
+            if render:
+                env.render(mode='human_fast')
+        r = find_conclusion(obs, start)
 
-        # vehicle.plot_progress()
+        #TODO: keep going here.
+        if r == -1 or r == 0:
+            crashes += 1
+        else:
+            completes += 1
+            lap_times.append(laptime)
 
-        # time.sleep(4)
-        # s_hist.show_history(wait=True)
+    success_rate = (completes / (completes + crashes) * 100)
+    if len(lap_times) > 0:
+        avg_times, std_dev = np.mean(lap_times), np.std(lap_times)
+    else:
+        avg_times, std_dev = 0, 0
+
+    print(f"Crashes: {crashes}")
+    print(f"Completes: {completes} --> {success_rate:.2f} %")
+    print(f"Lap times Avg: {avg_times} --> Std: {std_dev}")
+
+    eval_dict = {}
+    eval_dict['name'] = vehicle.name
+    eval_dict['success_rate'] = float(success_rate)
+    eval_dict['avg_times'] = float(avg_times)
+    eval_dict['std_dev'] = float(std_dev)
+
+    print(f"Finished running test and saving file with results.")
+
+    return eval_dict
 
 
 
@@ -325,7 +248,7 @@ class TestVehicles(TestData):
     def add_vehicle(self, vehicle):
         self.vehicle_list.append(vehicle)
 
-    def run_eval(self, show=False, add_obs=False, save=False, wait=False):
+    def run_eval(self):
         N = self.N = len(self.vehicle_list)
         self.init_arrays(N, self.conf.test_n)
         conf = self.conf
@@ -333,17 +256,11 @@ class TestVehicles(TestData):
         env = gym.make('f110_gym:f110-v0', map=conf.map_name, map_ext=conf.map_ext, num_agents=1)
         map_reset_pt = np.array([[conf.sx, conf.sy, conf.stheta]])
 
-        state, step_reward, done, info = env.reset(map_reset_pt)
-
         for i in range(self.conf.test_n):
-            if add_obs:
-                env.add_obstacles(10, [0.5, 0.5])
             for j in range(N):
                 vehicle = self.vehicle_list[j]
 
                 r, laptime = self.run_lap(vehicle, env, map_reset_pt)
-    
-                
                 print(f"#{i}: Lap time for ({vehicle.name}): {laptime} --> Reward: {r}")
                 self.endings[i, j] = r
                 if r == -1 or r == 0:

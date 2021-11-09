@@ -1,0 +1,25 @@
+
+Testing Complete 
+Map name:  
+-----------------------------------------------------
+-----------------------------------------------------
+Vehicle: std_end_baseline_2
+Crashes: 1.0 --> Completes 0.0
+% Finished = 0.00
+Avg lap times: 0.0
+-----------------------------------------------------
+Vehicle: kernel_end_RewardMag_2
+Crashes: 0.0 --> Completes 1.0
+% Finished = 100.00
+Avg lap times: 7.0799999999998935
+-----------------------------------------------------
+Vehicle: Follow the Gap method
+Crashes: 0.0 --> Completes 1.0
+% Finished = 100.00
+Avg lap times: 8.909999999999854
+-----------------------------------------------------
+Vehicle: Oracle Path Follower
+Crashes: 0.0 --> Completes 1.0
+% Finished = 100.00
+Avg lap times: 8.549999999999862
+-----------------------------------------------------

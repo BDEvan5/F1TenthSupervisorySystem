@@ -1,12 +1,8 @@
-
-
-
 # map data
 # map_name: "example_map"
 # map_name: "vegas"
 # map_name: "torino"
 # map_name: "levine_blocked"
-# map_name: "stata_basement"
 # map_name: "berlin"
 map_name: "porto"
 # map_name: "race_track"
@@ -16,11 +12,6 @@ map_ext: ".png"
 # starting positions for vehicle
 sx: 0.0
 sy: 0
-# stheta: 1.37079632679 
-# stheta: -2
-# stheta: 2
-# stheta: -3.1
-# stheta:  3.1
 
 stheta: 0  # porto
 # stheta: 2.5 # torino
@@ -39,42 +30,29 @@ max_a: 8.5
 max_steer: 0.4
 max_d_dot: 3.2
 
-
 lookahead: 0.82
-# lookahead: 0.4
 v_gain: 0.9
-force_f: 0.8
-
-r_dis_scale: 1
 
 plan_frequency: 1
 v_min_plan: 1
 max_time: 50
-# max_time: 14
 
 cross_track_scale: 1  # scaled val for cth error
 
 
 kernel_path: "Kernels/"
-# track_kernel_path: "std_d2"
 track_kernel_path: "std"
-obs_img_size: 1.3 # size in meters 
-side_img_size: [2, 1]
 n_phi: 41
 n_modes: 5
 phi_range: 6.28
-dynamics_pts: 5
 discrim_block: 1 
 discrim_phi: 0.1
 n_dx: 80
-# time_step: 0.04
-time_step: 0.1
+# time_step: 0.1
 kernel_time_step: 0.3
 
 test_n: 10
-n_obs: 0
 train_n: 20000
-obs_size: 0.5
 n_beams: 20
 range_finder_scale: 5
 h_size: 100
