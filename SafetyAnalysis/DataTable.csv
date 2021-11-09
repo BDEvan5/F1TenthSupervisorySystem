@@ -1,0 +1,2 @@
+EvalName,map_name,reward,test_n,train_n,kernel_time_step,name,avg_times,std_dev,success_rate,test_number,train_time
+final_1,porto,magnitude_1,1,20000,0.3,kernel_end_RewardMag_2,18.04000000000002,0.0,100.0,1,0

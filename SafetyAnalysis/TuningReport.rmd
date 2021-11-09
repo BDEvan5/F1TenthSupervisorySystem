@@ -1,0 +1,42 @@
+---
+title: "TuningReport"
+author: "Benjamin Evans"
+date: "09/11/2021"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Introduction
+
+The supervisory safety system has been built and is to be tuned for ideal use.
+```{r, echo=FALSE, include=FALSE}
+test_data = read.csv("DataTable.csv")
+# knitr::opts_chunk$set(include = FALSE)
+knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(warning = FALSE)
+
+library(reshape2)
+library(ggplot2)
+library(dplyr)
+
+```
+
+# Testing
+
+The following systems have been build:
+```{r, fig.height=2}
+test_data %>%
+  select(avg_times, success_rate, test_number) %>%
+  ggplot(aes(x=avg_times, y=success_rate, col=test_number, size=10))+
+  geom_point()+
+  xlim(350, 750)+
+  ylim(70, 100)+
+  xlab("Average times")+
+  ylab("Success Rate")
+```
+
+
+
