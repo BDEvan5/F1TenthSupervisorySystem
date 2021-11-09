@@ -26,7 +26,7 @@ def rando_test():
 
 
 test_n = 100
-run_n = 1
+run_n = 2
 baseline_name = f"std_end_baseline_{run_n}"
 kernel_name = f"kernel_end_RewardMag_{run_n}"
 # kernel_name = f"kernel_end_RewardZero_{run_n}"
@@ -38,7 +38,8 @@ sim_conf = load_conf("track_kernel")
 
 
 def train_baseline(agent_name):
-    planner = EndVehicleTrain(agent_name, sim_conf, True)
+    planner = EndVehicleTrain(agent_name, sim_conf)
+    # planner = EndVehicleTrain(agent_name, sim_conf, True)
 
     TrainVehicle(sim_conf, planner)
 
@@ -48,8 +49,8 @@ def test_baseline(agent_name):
     run_multi_test(sim_conf, planner)
 
 def test_oracle():
-    vehicle = Oracle(sim_conf)
-    # vehicle = FollowTheGap(sim_conf)
+    # vehicle = Oracle(sim_conf)
+    vehicle = FollowTheGap(sim_conf)
 
     run_multi_test(sim_conf, vehicle)
 
@@ -109,7 +110,7 @@ def full_comparison(baseline_name, kernel_name):
 if __name__ == "__main__":
     # train_baseline(baseline_name)
     # test_baseline(baseline_name)
-    # test_oracle()
+    test_oracle()
 
     # train_kenel(kernel_name)
     # test_kernel_sss(kernel_name)
@@ -117,7 +118,7 @@ if __name__ == "__main__":
     # test_baseline(kernel_name)
 
     # baseline_vs_kernel(baseline_name, kernel_name)
-    full_comparison(baseline_name, kernel_name)
+    # full_comparison(baseline_name, kernel_name)
 
 
 

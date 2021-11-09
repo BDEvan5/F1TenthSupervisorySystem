@@ -43,13 +43,14 @@ class EndBase:
 
         return nn_obs
 
-    def act(self, obs):
+    def plan(self, obs):
         if obs['linear_vels_x'][0] < self.v_min_plan:
             return np.array([0, 7])
-        if self.action is None or self.loop_counter == self.plan_f:
-            self.loop_counter = 0
-            self.plan_act(obs)
-        self.loop_counter += 1
+        # if self.action is None or self.loop_counter == self.plan_f:
+        #     self.loop_counter = 0
+        #     self.plan_act(obs)
+        # self.loop_counter += 1
+        self.plan_act(obs)
         return self.action
 
 
@@ -155,6 +156,3 @@ class EndVehicleTest(EndBase):
 
         return self.action # implemented for the safety wrapper
 
-    def plan(self, obs):
-        # alias for testing
-        return self.plan_act(obs)

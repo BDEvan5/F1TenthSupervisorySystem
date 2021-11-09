@@ -9,15 +9,15 @@ from F1TenthSupervisorySystem.Utils.speed_utils import calculate_speed
 from F1TenthSupervisorySystem.Utils import pure_pursuit_utils
 
 
-class OraclePP:
+class Oracle:
     def __init__(self, sim_conf) -> None:
         self.name = "Oracle Path Follower"
         self.path_name = None
 
         self.wheelbase = sim_conf.l_f + sim_conf.l_r
 
-        self.v_gain = 0.5
-        self.lookahead = 1
+        self.v_gain = sim_conf.v_gain
+        self.lookahead = sim_conf.lookahead
         self.max_reacquire = 20
 
         self.waypoints = None
@@ -25,6 +25,7 @@ class OraclePP:
         self.v_min_plan = sim_conf.v_min_plan
 
         self.aim_pts = []
+        self.plan_track(sim_conf.map_name)
 
     def _get_current_waypoint(self, position):
         lookahead_distance = self.lookahead
@@ -60,7 +61,7 @@ class OraclePP:
         return state
 
 
-    def act_pp(self, obs):
+    def plan(self, obs):
         if obs['linear_vels_x'][0] < self.v_min_plan:
             return np.array([0, 7])
 
@@ -80,28 +81,8 @@ class OraclePP:
         # speed = calculate_speed(steering_angle)
         # speed = 2
 
-        # plt.figure(1)
-        # plt.clf()
-        # plt.plot(self.waypoints[:, 0], self.waypoints[:, 1], 'x-', markersize=8)
-        # plt.plot(state[0], state[1], 'x', color='green', markersize=20)
-        # plt.plot(lookahead_point[0], lookahead_point[1], 'x', color='blue', markersize=20)
-        # plt.gca().set_aspect('equal')
-
-        # plt.pause(0.0001)
 
         return np.array([steering_angle, speed])
-
-    def reset_lap(self):
-        self.aim_pts.clear()
-
-
-class Oracle(OraclePP):
-    def __init__(self, sim_conf):
-        OraclePP.__init__(self, sim_conf)
-        self.sim_conf = sim_conf # kept for optimisation
-        self.n_beams = 10
-        self.plan_track(sim_conf.map_name)
-        # self.plot_plan()
 
     def plan_track(self, map_name):
         track = []
@@ -148,15 +129,7 @@ class Oracle(OraclePP):
         plt.plot(self.waypoints[:, 0], self.waypoints[:, 1], 'x-', markersize=16)
         plt.gca().set_aspect('equal')
 
-        # plt.figure(2)
-        # plt.plot(self.waypoints[:, 2])
-
         # plt.show()
         plt.pause(0.0001)
 
-    def plan(self, obs):
-        return self.act_pp(obs)
-        
-    def act(self, obs):
-        return self.act_pp(obs)
         

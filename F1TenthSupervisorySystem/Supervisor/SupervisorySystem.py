@@ -82,36 +82,26 @@ class Supervisor:
         return state
 
     def plan(self, obs):
-        # if obs['linear_vels_x'][0] < self.v_min_plan:
-        #     return np.array([0, 7])
-        # if self.action is None or self.loop_counter == self.plan_f:
-        #     self.loop_counter = 0
-        #     self.calculate_action(obs)
-        # self.loop_counter += 1
-        self.calculate_action(obs)
-        return self.action
-
-    def calculate_action(self, obs):
-        init_action = self.planner.plan_act(obs)
+        init_action = self.planner.plan(obs)
         init_action[1] = self.v
         state = self.extract_state(obs)
         safe, next_state = check_init_action(state, init_action, self.kernel, self.time_step)
         if safe:
             self.action = init_action
             # self.history.add_actions(init_action)
-            return
+            return self.action
 
         valids = simulate_and_classify(state, self.dw, self.kernel, self.time_step)
         if not valids.any():
             print('No Valid options')
             print(f"State: {state}")
             self.action = init_action
-            return
+            return self.action
         
         self.action = modify_action(valids, self.dw)
         # self.history.add_actions(init_action, self.action)
         # print(f"Valids: {valids} -> new action: {action}")
-
+        return self.action
 
 #TODO jit all of this.
 
@@ -170,16 +160,16 @@ class LearningSupervisor(Supervisor):
         s_prime['reward'] = self.calculate_reward()
         self.planner.done_entry(s_prime)
 
-    def calculate_action(self, obs):
+    def plan(self, obs):
         obs['reward'] = self.calculate_reward() # check this works.
-        init_action = self.planner.plan_act(obs)
+        init_action = self.planner.plan(obs)
         state = self.extract_state(obs)
 
         safe, next_state = check_init_action(state, init_action, self.kernel, self.time_step)
         if safe:
             # self.safe_history.add_locations(init_action[0], init_action[0])
             self.action = init_action
-            return
+            return self.action
 
         self.intervene = True
 
@@ -187,14 +177,14 @@ class LearningSupervisor(Supervisor):
         if not valids.any():
             print(f'No Valid options: state : {state}')
             self.action = init_action
-            return
+            return self.action
         
         self.action = modify_action(valids, self.dw)
         # print(f"Valids: {valids} -> new action: {action}")
         # self.safe_history.add_locations(init_action[0], action[0])
 
         self.intervention_mag = self.action[0] - init_action[0]
-
+        return self.action
 
 @njit(cache=True)
 def modify_action(valid_window, dw):

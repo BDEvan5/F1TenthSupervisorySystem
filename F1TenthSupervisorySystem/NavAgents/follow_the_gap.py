@@ -13,10 +13,7 @@ class FollowTheGap:
         self.max_speed = conf.max_v
         self.max_steer = conf.max_steer
         self.v_min_plan = conf.v_min_plan
-
-    def act(self, obs):
-        return self.plan(obs)
-        
+       
     def plan(self, obs):
 
         if obs['linear_vels_x'][0] < self.v_min_plan:
