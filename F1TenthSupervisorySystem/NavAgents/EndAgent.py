@@ -71,8 +71,9 @@ class EndVehicleTrain(EndBase):
         self.t_his = TrainHistory(agent_name, load)
 
         # self.calculate_reward = DistReward() 
-        # self.calculate_reward = CthReward(0.004, 0.004) 
-        self.calculate_reward = SteeringReward(0.01) 
+        # self.calculate_reward = RefCTHReward(sim_conf, 0.004, 0.004) 
+        # self.calculate_reward = SteeringReward(0.01) 
+        self.calculate_reward = RefDistanceReward(sim_conf, 1) 
 
     def plan_act(self, obs):
         nn_obs = self.transform_obs(obs)

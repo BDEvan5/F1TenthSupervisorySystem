@@ -21,3 +21,7 @@ Vehicles/
 .Rproj.user
 
 SafetyAnalysis/SafetyAnalysis.Rproj
+
+SafetyAnalysis/.RData
+
+SafetyAnalysis/.Rhistory

@@ -34,7 +34,7 @@ def train_final_kenel():
     safety_planner.calculate_reward = safety_planner.magnitude_reward
     #TODO: set up rewards as separate classes
 
-    train_time = TrainVehicle(sim_conf, safety_planner)
+    train_time = TrainVehicle(sim_conf, safety_planner, True)
 
     planner = EndVehicleTest(agent_name, sim_conf)
     kernel = TrackKernel(sim_conf)
@@ -46,7 +46,8 @@ def train_final_kenel():
     config_dict['EvalName'] = test_name 
     config_dict['train_time'] = train_time
     config_dict['test_number'] = n
-    config_dict['reward'] = f"magnitude_{1}"
+    config_dict['kernel_reward'] = f"magnitude_{1}"
+    config_dict['agent_reward'] = f"steering_01"
     config_dict.update(eval_dict)
 
     save_conf_dict(config_dict)
@@ -60,7 +61,8 @@ def eval_kernel_final():
     planner = EndVehicleTest(agent_name, sim_conf)
     kernel = TrackKernel(sim_conf)
     safety_planner = Supervisor(planner, kernel, sim_conf)
-    eval_dict = run_evaluation(sim_conf, safety_planner, render=False)
+    # eval_dict = run_evaluation(sim_conf, safety_planner, render=False)
+    eval_dict = run_evaluation(sim_conf, safety_planner, render=True)
 
     config_dict = vars(sim_conf)
     config_dict['EvalName'] = test_name 
@@ -75,9 +77,9 @@ def eval_kernel_final():
 
 
 def train_baseline():
-    n = 1
-    test_name = f"final_{n}"
-    agent_name = f"baseline{test_name}_{run_n}"
+    n = 3
+    test_name = f"reward_{n}"
+    agent_name = f"baseline_{test_name}_{run_n}"
 
     planner = EndVehicleTrain(agent_name, sim_conf)
     # planner = EndVehicleTrain(agent_name, sim_conf, True)
@@ -90,7 +92,10 @@ def train_baseline():
     config_dict['EvalName'] = test_name 
     config_dict['train_time'] = train_time
     config_dict['test_number'] = n
-    config_dict['reward'] = f"steering_01"
+    config_dict['reward'] = f"CthRef_1"
+    config_dict['reward'] = f"DisRef_1"
+    # config_dict['b_heading'] = 0.004
+    # config_dict['b_vel'] = 0.004
     config_dict.update(eval_dict)
 
     save_conf_dict(config_dict)
@@ -158,8 +163,8 @@ if __name__ == "__main__":
     # train_final_kenel()
     # eval_kernel_final()
 
-    # train_baseline()
-    eval_baseline()
+    train_baseline()
+    # eval_baseline()
 
     # eval_fgm()
     # eval_oracle()
