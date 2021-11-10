@@ -35,7 +35,7 @@ def save_conf_dict(dictionary):
 
 
 """Train"""
-def TrainVehicle(conf, vehicle, add_obs=False):
+def TrainVehicle(conf, vehicle, render=False):
     start_time = time.time()
     path = conf.vehicle_path + vehicle.name
 
@@ -54,8 +54,8 @@ def TrainVehicle(conf, vehicle, add_obs=False):
         state = s_prime
         vehicle.agent.train()
         
-        # env.render('human_fast')
-        # env.render('human')
+        if render:
+            env.render('human_fast')
 
         if s_prime['lap_times'][0] > max_ep_time:
             done = True
@@ -72,8 +72,6 @@ def TrainVehicle(conf, vehicle, add_obs=False):
             start = time.time()
 
             state, step_reward, done, info = env.reset(map_reset_pt)
-            if add_obs:
-                env.add_obstacles(conf.n_obs, [conf.obs_size, conf.obs_size])
             # env.render()
 
     vehicle.agent.save(directory=path)
