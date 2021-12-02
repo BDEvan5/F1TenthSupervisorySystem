@@ -3,12 +3,12 @@ import numpy as np
 
 
 class RandomPlanner:
-    def __init__(self, conf):
+    def __init__(self, conf, name="Random"):
         self.d_max = conf.max_steer # radians  
         self.v = 2        
         self.name = "RandoPlanner"
 
-    def plan_act(self, obs):
+    def plan(self, obs):
         v_current = obs['linear_vels_x'][0]
         v_min_plan = 1
         if v_current < v_min_plan:
