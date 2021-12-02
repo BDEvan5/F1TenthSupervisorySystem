@@ -258,7 +258,7 @@ class BaseKernel:
 class TrackKernel(BaseKernel):
     def __init__(self, sim_conf):
         super().__init__(sim_conf)
-        kernel_name = f"{sim_conf.kernel_path}TrackKernel_{sim_conf.track_kernel_path}_{sim_conf.map_name}.npy"
+        kernel_name = kernel_name = f"{sim_conf.kernel_path}Kernel_{sim_conf.kernel_mode}_std_{sim_conf.map_name}.npy"
         self.kernel = np.load(kernel_name)
 
         file_name = 'maps/' + sim_conf.map_name + '.yaml'

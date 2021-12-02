@@ -11,7 +11,7 @@ Avg lap times: 0.0
 Vehicle: kernel_end_RewardMag_2
 Crashes: 0.0 --> Completes 1.0
 % Finished = 100.00
-Avg lap times: 7.0799999999998935
+Avg lap times: 14.839999999999728
 -----------------------------------------------------
 Vehicle: Follow the Gap method
 Crashes: 0.0 --> Completes 1.0

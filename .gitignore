@@ -25,3 +25,5 @@ SafetyAnalysis/SafetyAnalysis.Rproj
 SafetyAnalysis/.RData
 
 SafetyAnalysis/.Rhistory
+
+*.pyc
