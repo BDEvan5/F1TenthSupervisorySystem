@@ -21,12 +21,12 @@ def evaluate_vehicle(vehicle, conf, show=False):
     for i in range(conf.test_n):
         obs, step_reward, done, info = env.reset(np.array([[conf.sx, conf.sy, conf.stheta]]))
         lap_time = 0.0
-        while not done:
+        while not done and obs['lap_counts'][0] == 0:
             action = vehicle.plan_act(obs)
             obs, step_reward, done, _ = env.step(action[None, :])
             laptime += step_reward
-        if show:
-            env.render(mode='human_fast')
+            if show:
+                env.render(mode='human_fast')
 
         r = find_conclusion(obs, start)
 

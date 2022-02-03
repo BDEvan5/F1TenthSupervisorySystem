@@ -1,7 +1,7 @@
 
 
-from SupervisorySafetySystem.KernelGenerator import prepare_track_img, ViabilityGenerator
-from SupervisorySafetySystem.DiscrimKernel import DiscrimGenerator
+# from SupervisorySafetySystem.KernelGenerator import prepare_track_img, ViabilityGenerator
+# from SupervisorySafetySystem.DiscrimKernel import DiscrimGenerator
 
 import time 
 
@@ -155,7 +155,7 @@ def rando_results(n):
         kernel = TrackKernel(conf)
         safety_planner = Supervisor(planner, kernel, conf)
 
-        eval_dict = evaluate_vehicle(safety_planner, conf, False)
+        eval_dict = evaluate_vehicle(safety_planner, conf, True)
         
         config_dict = vars(conf)
         config_dict['test_number'] = n
